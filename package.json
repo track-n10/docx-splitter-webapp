@@ -1,0 +1,19 @@
+{
+  "name": "docx-chapter-splitter",
+  "version": "1.0.0",
+  "description": "Web application to split DOCX documents into chapters",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve .",
+    "build": "echo 'Static build complete'"
+  },
+  "keywords": [
+    "docx",
+    "document",
+    "splitting",
+    "chapters",
+    "web-app"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

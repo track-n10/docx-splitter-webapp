@@ -1,16 +1,16 @@
-# DOCX Chapter Splitter
+# DOCX Chapter Splitter - Vercel Edition
 
-A web application for splitting DOCX documents into chapters based on user-provided chapter summaries. This app provides both frontend and backend functionality with a completely free deployment solution.
+A client-side web application for splitting DOCX documents into chapters. All processing happens in your browser - your documents never leave your computer!
 
 ## Features
 
-- ✅ Upload DOCX files via drag & drop or file picker
+- ✅ Upload DOCX files via drag & drop or file picker  
 - ✅ Split documents based on chapter titles/summaries
-- ✅ Download individual chapters as DOCX files
-- ✅ Download all chapters as a ZIP file
+- ✅ Download individual chapters as HTML files
+- ✅ Copy chapter content to clipboard
 - ✅ Preview chapters in the browser
 - ✅ Responsive design with modern UI
-- ✅ Client-side fallback processing
+- ✅ 100% client-side processing (privacy-focused)
 - ✅ Completely free to deploy and use
 
 ## How It Works
