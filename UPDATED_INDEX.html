@@ -344,9 +344,9 @@
                 <div id="file-name" class="file-name">No file selected</div>
             </div>
             
-                         <div class="form-group">
-                 <label for="chapter-summary">Chapter Titles (one per line)</label>
-                 <textarea id="chapter-summary" placeholder="Enter chapter titles, one per line:
+            <div class="form-group">
+                <label for="chapter-summary">Chapter Titles (one per line)</label>
+                <textarea id="chapter-summary" placeholder="Enter chapter titles, one per line:
 
 Example:
 Introduction
@@ -359,14 +359,14 @@ Tips:
 • Try different formats: 'Chapter 1', 'CHAPTER 1', '1.', etc.
 • Use exact titles as they appear in your document
 • Check if your document has a table of contents"></textarea>
-             </div>
-             
-             <div class="form-group">
-                 <label>
-                     <input type="checkbox" id="auto-detect" style="margin-right: 8px;">
-                     Try automatic chapter detection (if titles don't work)
-                 </label>
-             </div>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="auto-detect" style="margin-right: 8px;">
+                    Try automatic chapter detection (if titles don't work)
+                </label>
+            </div>
             
             <button id="process-btn" class="btn">
                 <i class="fas fa-cogs"></i> Process Document in Browser
@@ -380,19 +380,19 @@ Tips:
             </div>
         </div>
         
-                 <div class="card" id="debug-section" style="display: none;">
-             <h2 class="card-title"><i class="fas fa-bug"></i> Processing Information</h2>
-             <div id="debug-info" style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.9rem;">
-                 <!-- Debug information will be shown here -->
-             </div>
-         </div>
-         
-         <div class="card" id="results-section" style="display: none;">
-             <h2 class="card-title"><i class="fas fa-book"></i> Generated Chapters</h2>
-             <div class="chapter-list" id="chapter-list">
-                 <!-- Chapters will be dynamically added here -->
-             </div>
-         </div>
+        <div class="card" id="debug-section" style="display: none;">
+            <h2 class="card-title"><i class="fas fa-bug"></i> Processing Information</h2>
+            <div id="debug-info" style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.9rem;">
+                <!-- Debug information will be shown here -->
+            </div>
+        </div>
+        
+        <div class="card" id="results-section" style="display: none;">
+            <h2 class="card-title"><i class="fas fa-book"></i> Generated Chapters</h2>
+            <div class="chapter-list" id="chapter-list">
+                <!-- Chapters will be dynamically added here -->
+            </div>
+        </div>
     </div>
     
     <div class="copy-alert" id="copy-alert">
@@ -610,28 +610,28 @@ Tips:
                     for (let i = 1; i < normalizedTitles.length; i++) {
                         const title = normalizedTitles[i];
                         
-                                                 // More flexible matching
-                         if (normalizedMatch.includes(title) || title.includes(normalizedMatch)) {
-                             if (normalizedMatch.length > 3) { // Avoid very short matches
-                                 breaks.push(match.index);
-                                 console.log(`Found break for "${chapterTitles[i]}" at position ${match.index}`);
-                             }
-                         }
-                         
-                         // Also try word-based matching for more flexibility
-                         const titleWords = title.split(/\s+/);
-                         const matchWords = normalizedMatch.split(/\s+/);
-                         
-                         if (titleWords.length > 1 && matchWords.length > 1) {
-                             const wordMatches = titleWords.filter(word => 
-                                 word.length > 2 && matchWords.some(mWord => mWord.includes(word) || word.includes(mWord))
-                             );
-                             
-                             if (wordMatches.length >= Math.min(2, titleWords.length * 0.5)) {
-                                 breaks.push(match.index);
-                                 console.log(`Found break for "${chapterTitles[i]}" by word matching at position ${match.index}`);
-                             }
-                         }
+                        // More flexible matching
+                        if (normalizedMatch.includes(title) || title.includes(normalizedMatch)) {
+                            if (normalizedMatch.length > 3) { // Avoid very short matches
+                                breaks.push(match.index);
+                                console.log(`Found break for "${chapterTitles[i]}" at position ${match.index}`);
+                            }
+                        }
+                        
+                        // Also try word-based matching for more flexibility
+                        const titleWords = title.split(/\s+/);
+                        const matchWords = normalizedMatch.split(/\s+/);
+                        
+                        if (titleWords.length > 1 && matchWords.length > 1) {
+                            const wordMatches = titleWords.filter(word => 
+                                word.length > 2 && matchWords.some(mWord => mWord.includes(word) || word.includes(mWord))
+                            );
+                            
+                            if (wordMatches.length >= Math.min(2, titleWords.length * 0.5)) {
+                                breaks.push(match.index);
+                                console.log(`Found break for "${chapterTitles[i]}" by word matching at position ${match.index}`);
+                            }
+                        }
                     }
                 }
             }
@@ -658,133 +658,133 @@ Tips:
             return chapters;
         }
         
-                 function tryAutomaticDetection(html, targetCount) {
-             console.log('Attempting automatic chapter detection...');
-             
-             // Look for common chapter patterns
-             const chapterPatterns = [
-                 /(?:cap[íi]tulo|chapter|ch\.?)\s*\d+/gi,
-                 /(?:parte|part)\s*\d+/gi,
-                 /\d+\.\s*[A-Z]/g,
-                 /<h[1-3][^>]*>[^<]*(?:cap[íi]tulo|chapter|parte|part|\d+\.)/gi,
-                 /<p[^>]*><strong[^>]*>[^<]*(?:cap[íi]tulo|chapter|parte|part|\d+\.)/gi
-             ];
-             
-             let bestBreaks = [];
-             let bestScore = 0;
-             
-             for (const pattern of chapterPatterns) {
-                 const breaks = [0];
-                 let match;
-                 pattern.lastIndex = 0;
-                 
-                 while ((match = pattern.exec(html)) !== null) {
-                     breaks.push(match.index);
-                 }
-                 
-                 // Score based on how close to target count and distribution
-                 const score = scoreBreaks(breaks, targetCount, html.length);
-                 console.log(`Pattern found ${breaks.length} breaks, score: ${score}`);
-                 
-                 if (score > bestScore && breaks.length > 1) {
-                     bestScore = score;
-                     bestBreaks = breaks;
-                 }
-             }
-             
-             if (bestBreaks.length > 1) {
-                 console.log(`Using automatic detection with ${bestBreaks.length} breaks`);
-                 return createChaptersFromBreaks(html, bestBreaks, targetCount);
-             }
-             
-             return null;
-         }
-         
-         function scoreBreaks(breaks, targetCount, totalLength) {
-             if (breaks.length < 2) return 0;
-             
-             // Score based on count similarity and distribution
-             const countScore = Math.max(0, 1 - Math.abs(breaks.length - targetCount) / targetCount);
-             
-             // Score based on even distribution
-             const avgDistance = totalLength / (breaks.length - 1);
-             let distributionScore = 0;
-             for (let i = 1; i < breaks.length; i++) {
-                 const distance = breaks[i] - breaks[i-1];
-                 distributionScore += Math.max(0, 1 - Math.abs(distance - avgDistance) / avgDistance);
-             }
-             distributionScore /= (breaks.length - 1);
-             
-             return countScore * 0.6 + distributionScore * 0.4;
-         }
-         
-         function createChaptersFromBreaks(html, breaks, targetCount) {
-             const chapters = [];
-             
-             // Generate titles
-             for (let i = 0; i < Math.min(targetCount, breaks.length); i++) {
-                 const startPos = breaks[i] || 0;
-                 const endPos = breaks[i + 1] || html.length;
-                 
-                 const content = html.substring(startPos, endPos).trim();
-                 const title = `Capítulo ${i + 1}`;
-                 
-                 chapters.push({
-                     title: title,
-                     content: content || '<p>Conteúdo do capítulo.</p>'
-                 });
-             }
-             
-             return chapters;
-         }
-         
-         function splitByLength(html, chapterTitles) {
-             console.log('Splitting by length...');
-             const chapters = [];
-             const totalLength = html.length;
-             const chapterLength = Math.floor(totalLength / chapterTitles.length);
-             
-             // Split HTML into roughly equal parts
-             for (let i = 0; i < chapterTitles.length; i++) {
-                 const startPos = i * chapterLength;
-                 let endPos = (i + 1) * chapterLength;
-                 
-                 // For the last chapter, take everything remaining
-                 if (i === chapterTitles.length - 1) {
-                     endPos = totalLength;
-                 }
-                 
-                 // Try to break at a reasonable point (end of paragraph)
-                 if (i < chapterTitles.length - 1) {
-                     const searchStart = endPos - 200;
-                     const searchEnd = endPos + 200;
-                     const searchArea = html.substring(searchStart, Math.min(searchEnd, totalLength));
-                     const paragraphEnd = searchArea.lastIndexOf('</p>');
-                     
-                     if (paragraphEnd !== -1) {
-                         endPos = searchStart + paragraphEnd + 4; // +4 for '</p>'
-                     }
-                 }
-                 
-                 let content = html.substring(startPos, endPos).trim();
-                 
-                 // Ensure we have some content
-                 if (!content) {
-                     content = '<p>Seção do documento.</p>';
-                 }
-                 
-                 // Clean up broken HTML tags at the beginning
-                 content = content.replace(/^[^<]*>/, '');
-                 
-                 chapters.push({
-                     title: chapterTitles[i],
-                     content: content
-                 });
-             }
-             
-             console.log(`Created ${chapters.length} chapters by length`);
-             return chapters;
-         }
+        function tryAutomaticDetection(html, targetCount) {
+            console.log('Attempting automatic chapter detection...');
+            
+            // Look for common chapter patterns
+            const chapterPatterns = [
+                /(?:cap[íi]tulo|chapter|ch\.?)\s*\d+/gi,
+                /(?:parte|part)\s*\d+/gi,
+                /\d+\.\s*[A-Z]/g,
+                /<h[1-3][^>]*>[^<]*(?:cap[íi]tulo|chapter|parte|part|\d+\.)/gi,
+                /<p[^>]*><strong[^>]*>[^<]*(?:cap[íi]tulo|chapter|parte|part|\d+\.)/gi
+            ];
+            
+            let bestBreaks = [];
+            let bestScore = 0;
+            
+            for (const pattern of chapterPatterns) {
+                const breaks = [0];
+                let match;
+                pattern.lastIndex = 0;
+                
+                while ((match = pattern.exec(html)) !== null) {
+                    breaks.push(match.index);
+                }
+                
+                // Score based on how close to target count and distribution
+                const score = scoreBreaks(breaks, targetCount, html.length);
+                console.log(`Pattern found ${breaks.length} breaks, score: ${score}`);
+                
+                if (score > bestScore && breaks.length > 1) {
+                    bestScore = score;
+                    bestBreaks = breaks;
+                }
+            }
+            
+            if (bestBreaks.length > 1) {
+                console.log(`Using automatic detection with ${bestBreaks.length} breaks`);
+                return createChaptersFromBreaks(html, bestBreaks, targetCount);
+            }
+            
+            return null;
+        }
+        
+        function scoreBreaks(breaks, targetCount, totalLength) {
+            if (breaks.length < 2) return 0;
+            
+            // Score based on count similarity and distribution
+            const countScore = Math.max(0, 1 - Math.abs(breaks.length - targetCount) / targetCount);
+            
+            // Score based on even distribution
+            const avgDistance = totalLength / (breaks.length - 1);
+            let distributionScore = 0;
+            for (let i = 1; i < breaks.length; i++) {
+                const distance = breaks[i] - breaks[i-1];
+                distributionScore += Math.max(0, 1 - Math.abs(distance - avgDistance) / avgDistance);
+            }
+            distributionScore /= (breaks.length - 1);
+            
+            return countScore * 0.6 + distributionScore * 0.4;
+        }
+        
+        function createChaptersFromBreaks(html, breaks, targetCount) {
+            const chapters = [];
+            
+            // Generate titles
+            for (let i = 0; i < Math.min(targetCount, breaks.length); i++) {
+                const startPos = breaks[i] || 0;
+                const endPos = breaks[i + 1] || html.length;
+                
+                const content = html.substring(startPos, endPos).trim();
+                const title = `Capítulo ${i + 1}`;
+                
+                chapters.push({
+                    title: title,
+                    content: content || '<p>Conteúdo do capítulo.</p>'
+                });
+            }
+            
+            return chapters;
+        }
+        
+        function splitByLength(html, chapterTitles) {
+            console.log('Splitting by length...');
+            const chapters = [];
+            const totalLength = html.length;
+            const chapterLength = Math.floor(totalLength / chapterTitles.length);
+            
+            // Split HTML into roughly equal parts
+            for (let i = 0; i < chapterTitles.length; i++) {
+                const startPos = i * chapterLength;
+                let endPos = (i + 1) * chapterLength;
+                
+                // For the last chapter, take everything remaining
+                if (i === chapterTitles.length - 1) {
+                    endPos = totalLength;
+                }
+                
+                // Try to break at a reasonable point (end of paragraph)
+                if (i < chapterTitles.length - 1) {
+                    const searchStart = endPos - 200;
+                    const searchEnd = endPos + 200;
+                    const searchArea = html.substring(searchStart, Math.min(searchEnd, totalLength));
+                    const paragraphEnd = searchArea.lastIndexOf('</p>');
+                    
+                    if (paragraphEnd !== -1) {
+                        endPos = searchStart + paragraphEnd + 4; // +4 for '</p>'
+                    }
+                }
+                
+                let content = html.substring(startPos, endPos).trim();
+                
+                // Ensure we have some content
+                if (!content) {
+                    content = '<p>Seção do documento.</p>';
+                }
+                
+                // Clean up broken HTML tags at the beginning
+                content = content.replace(/^[^<]*>/, '');
+                
+                chapters.push({
+                    title: chapterTitles[i],
+                    content: content
+                });
+            }
+            
+            console.log(`Created ${chapters.length} chapters by length`);
+            return chapters;
+        }
         
         function renderChapters(chapters) {
             const chapterList = document.getElementById('chapter-list');
@@ -794,30 +794,30 @@ Tips:
                 const chapterCard = document.createElement('div');
                 chapterCard.className = 'chapter-card';
                 
-                                 const previewContent = chapter.content.substring(0, 300) + (chapter.content.length > 300 ? '...' : '');
-                 const contentLength = chapter.content.length;
-                 const wordCount = chapter.content.replace(/<[^>]*>/g, '').split(/\s+/).length;
-                 
-                 chapterCard.innerHTML = `
-                     <div class="chapter-header">
-                         <div class="chapter-number">${index + 1}</div>
-                         <h3 class="chapter-title">${chapter.title}</h3>
-                     </div>
-                     <div class="chapter-content">
-                         <div>${previewContent}</div>
-                         <div class="chapter-stats" style="margin-top: 10px; font-size: 0.8rem; opacity: 0.7;">
-                             📄 ${contentLength} characters | 📝 ~${wordCount} words
-                         </div>
-                     </div>
-                     <div class="chapter-actions">
-                         <button class="btn copy-btn" data-index="${index}">
-                             <i class="fas fa-copy"></i> Copy HTML
-                         </button>
-                         <button class="btn btn-success download-btn" data-index="${index}">
-                             <i class="fas fa-download"></i> Save HTML
-                         </button>
-                     </div>
-                 `;
+                const previewContent = chapter.content.substring(0, 300) + (chapter.content.length > 300 ? '...' : '');
+                const contentLength = chapter.content.length;
+                const wordCount = chapter.content.replace(/<[^>]*>/g, '').split(/\s+/).length;
+                
+                chapterCard.innerHTML = `
+                    <div class="chapter-header">
+                        <div class="chapter-number">${index + 1}</div>
+                        <h3 class="chapter-title">${chapter.title}</h3>
+                    </div>
+                    <div class="chapter-content">
+                        <div>${previewContent}</div>
+                        <div class="chapter-stats" style="margin-top: 10px; font-size: 0.8rem; opacity: 0.7;">
+                            📄 ${contentLength} characters | 📝 ~${wordCount} words
+                        </div>
+                    </div>
+                    <div class="chapter-actions">
+                        <button class="btn copy-btn" data-index="${index}">
+                            <i class="fas fa-copy"></i> Copy HTML
+                        </button>
+                        <button class="btn btn-success download-btn" data-index="${index}">
+                            <i class="fas fa-download"></i> Save HTML
+                        </button>
+                    </div>
+                `;
                 
                 chapterList.appendChild(chapterCard);
             });
@@ -904,44 +904,44 @@ Tips:
             document.body.removeChild(a);
         }
         
-                 function showDebugInfo(chapters, chapterTitles) {
-             const debugInfo = document.getElementById('debug-info');
-             
-             let info = `<strong>📊 Processing Results:</strong><br><br>`;
-             info += `🎯 <strong>Input:</strong> ${chapterTitles.length} chapter titles requested<br>`;
-             info += `📖 <strong>Output:</strong> ${chapters.length} chapters created<br>`;
-             info += `🔍 <strong>Method:</strong> ${chapters.detectionMethod || 'Unknown'}<br><br>`;
-             
-             info += `<strong>📋 Chapter Analysis:</strong><br>`;
-             chapters.forEach((chapter, index) => {
-                 const wordCount = chapter.content.replace(/<[^>]*>/g, '').split(/\s+/).length;
-                 const charCount = chapter.content.length;
-                 info += `${index + 1}. <strong>${chapter.title}</strong><br>`;
-                 info += `   📄 ${charCount} characters, ~${wordCount} words<br>`;
-             });
-             
-             info += `<br><strong>💡 Tips for Better Results:</strong><br>`;
-             if (chapters.length === 1 && chapterTitles.length > 1) {
-                 info += `🔍 <strong>No chapter breaks found!</strong> Try:<br>`;
-                 info += `• Check "Try automatic chapter detection" option<br>`;
-                 info += `• Use exact titles as they appear in the document<br>`;
-                 info += `• Try simpler formats: "Chapter 1", "1.", "CHAPTER 1"<br>`;
-                 info += `• Look at your document's table of contents<br>`;
-             }
-             info += `• Open browser console (F12) for detailed debugging logs<br>`;
-             info += `• Titles are case-insensitive but should match content<br>`;
-             
-             debugInfo.innerHTML = info;
-         }
-         
-         function showCopyAlert() {
-             const alert = document.getElementById('copy-alert');
-             alert.classList.add('show');
-             
-             setTimeout(() => {
-                 alert.classList.remove('show');
-             }, 3000);
-         }
+        function showDebugInfo(chapters, chapterTitles) {
+            const debugInfo = document.getElementById('debug-info');
+            
+            let info = `<strong>📊 Processing Results:</strong><br><br>`;
+            info += `🎯 <strong>Input:</strong> ${chapterTitles.length} chapter titles requested<br>`;
+            info += `📖 <strong>Output:</strong> ${chapters.length} chapters created<br>`;
+            info += `🔍 <strong>Method:</strong> ${chapters.detectionMethod || 'Unknown'}<br><br>`;
+            
+            info += `<strong>📋 Chapter Analysis:</strong><br>`;
+            chapters.forEach((chapter, index) => {
+                const wordCount = chapter.content.replace(/<[^>]*>/g, '').split(/\s+/).length;
+                const charCount = chapter.content.length;
+                info += `${index + 1}. <strong>${chapter.title}</strong><br>`;
+                info += `   📄 ${charCount} characters, ~${wordCount} words<br>`;
+            });
+            
+            info += `<br><strong>💡 Tips for Better Results:</strong><br>`;
+            if (chapters.length === 1 && chapterTitles.length > 1) {
+                info += `🔍 <strong>No chapter breaks found!</strong> Try:<br>`;
+                info += `• Check "Try automatic chapter detection" option<br>`;
+                info += `• Use exact titles as they appear in the document<br>`;
+                info += `• Try simpler formats: "Chapter 1", "1.", "CHAPTER 1"<br>`;
+                info += `• Look at your document's table of contents<br>`;
+            }
+            info += `• Open browser console (F12) for detailed debugging logs<br>`;
+            info += `• Titles are case-insensitive but should match content<br>`;
+            
+            debugInfo.innerHTML = info;
+        }
+        
+        function showCopyAlert() {
+            const alert = document.getElementById('copy-alert');
+            alert.classList.add('show');
+            
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 3000);
+        }
     </script>
 </body>
 </html>
