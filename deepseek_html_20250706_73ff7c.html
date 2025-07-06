@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOCX Chapter Splitter - Web App</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --warning: #f8961e;
+            --danger: #e63946;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --electron-blue: #47848f;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #2c3e50);
+            color: var(--light);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: rgba(0, 0, 0, 0.4);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            border-radius: 15px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.12);
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+        
+        .card-title i {
+            font-size: 1.8rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #b0bec5;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-input-label:hover {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: var(--primary);
+        }
+        
+        .file-name {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--success);
+            font-style: italic;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #2a9d8f);
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #3dbde8, #21897e);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #f3722c);
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            background: rgba(67, 97, 238, 0.2);
+        }
+        
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .chapter-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-top: 1.5rem;
+        }
+        
+        .chapter-card {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .chapter-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .chapter-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .chapter-title {
+            font-size: 1.3rem;
+            margin: 0;
+        }
+        
+        .chapter-number {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .chapter-content {
+            padding: 25px;
+            max-height: 250px;
+            overflow-y: auto;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.15);
+        }
+        
+        .chapter-content p {
+            margin-bottom: 15px;
+        }
+        
+        .chapter-actions {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .chapter-preview {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-top: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .preview-content {
+            min-height: 400px;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 30px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .preview-content h1 {
+            margin-bottom: 20px;
+            font-size: 2.2rem;
+        }
+        
+        .preview-content h2 {
+            margin: 25px 0 15px;
+            color: var(--success);
+            font-size: 1.8rem;
+        }
+        
+        .copy-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            transform: translateX(200%);
+            transition: transform 0.4s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .copy-alert.show {
+            transform: translateX(0);
+        }
+        
+        .doc-info {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 1.5rem;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+        }
+        
+        .doc-icon {
+            font-size: 3.5rem;
+            color: var(--primary);
+        }
+        
+        .doc-details {
+            flex: 1;
+        }
+        
+        .progress-bar {
+            height: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            width: 0;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+        
+        .format-preserved {
+            margin-top: 15px;
+            font-size: 1rem;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem 0 1rem;
+            color: var(--gray);
+            font-size: 0.95rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 2rem;
+        }
+        
+        .app-version {
+            display: inline-block;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary);
+        }
+        
+        @media (max-width: 768px) {
+            .chapter-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .doc-info {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-book-open"></i> DOCX Chapter Splitter</h1>
+            <p class="subtitle">Aplicativo Web para dividir documentos DOCX em capítulos e gerar páginas HTML formatadas</p>
+        </header>
+        
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-file-upload"></i> Carregar Documento</h2>
+            
+            <div class="form-group">
+                <label for="docx-file">Selecione um arquivo DOCX</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="docx-file" accept=".docx">
+                    <div class="file-input-label">
+                        <i class="fas fa-cloud-upload-alt"></i> Arraste e solte ou clique para selecionar
+                    </div>
+                </div>
+                <div id="file-name" class="file-name">Nenhum arquivo selecionado</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="chapter-summary">Resumo dos Capítulos (digite um título por linha)</label>
+                <textarea id="chapter-summary" placeholder="Digite os títulos dos capítulos, um por linha:
+
+Exemplo:
+Introdução
+Capítulo 1: Os Fundamentos
+Capítulo 2: Desenvolvimento
+Conclusão"></textarea>
+            </div>
+            
+            <button id="process-btn" class="btn">
+                <i class="fas fa-cogs"></i> Processar Documento
+            </button>
+            
+            <div class="doc-info">
+                <div class="doc-icon">
+                    <i class="fas fa-file-word"></i>
+                </div>
+                <div class="doc-details">
+                    <h3>Status do Processamento</h3>
+                    <p id="status-text">Nenhum documento carregado</p>
+                    <div class="progress-bar">
+                        <div id="progress" class="progress"></div>
+                    </div>
+                    <div class="format-preserved">
+                        <i class="fas fa-check-circle"></i>
+                        <span>A formatação será preservada durante a conversão</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="chapters">Capítulos</div>
+            <div class="tab" data-tab="preview">Visualizar Capítulo</div>
+            <div class="tab" data-tab="export">Exportar</div>
+        </div>
+        
+        <div id="chapters-tab" class="tab-content active">
+            <h2 class="card-title"><i class="fas fa-book"></i> Capítulos Gerados</h2>
+            <p>Seu documento foi dividido nos seguintes capítulos:</p>
+            
+            <div class="chapter-list" id="chapter-list">
+                <!-- Chapters will be dynamically added here -->
+            </div>
+        </div>
+        
+        <div id="preview-tab" class="tab-content">
+            <div class="chapter-preview">
+                <div class="preview-header">
+                    <h2 class="card-title"><i class="fas fa-file-alt"></i> Visualização do Capítulo</h2>
+                    <button class="btn btn-success" id="copy-preview-btn">
+                        <i class="fas fa-copy"></i> Copiar
+                    </button>
+                </div>
+                
+                <div class="preview-content" id="preview-content">
+                    <!-- Preview content will be displayed here -->
+                </div>
+            </div>
+        </div>
+        
+        <div id="export-tab" class="tab-content">
+            <div class="card">
+                <h2 class="card-title"><i class="fas fa-download"></i> Opções de Exportação</h2>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-top: 20px;">
+                    <div class="card">
+                        <h3 style="margin-bottom: 15px; color: var(--success);"><i class="fas fa-file-archive"></i> Exportar como ZIP</h3>
+                        <p>Todos os capítulos serão compactados em um arquivo ZIP para fácil compartilhamento.</p>
+                        <button class="btn" id="export-zip-btn" style="margin-top: 15px;">
+                            <i class="fas fa-download"></i> Exportar ZIP
+                        </button>
+                    </div>
+                    
+                    <div class="card">
+                        <h3 style="margin-bottom: 15px; color: var(--success);"><i class="fas fa-file-download"></i> Baixar Todos os Capítulos</h3>
+                        <p>Baixe cada capítulo como um arquivo HTML individual.</p>
+                        <button class="btn btn-warning" id="download-all-btn" style="margin-top: 15px;">
+                            <i class="fas fa-download"></i> Baixar Tudo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="copy-alert" id="copy-alert">
+        <i class="fas fa-check-circle"></i> Conteúdo copiado para a área de transferência!
+    </div>
+    
+    <footer class="container">
+        <p>DOCX Chapter Splitter Web App &copy; 2023 | Processamento no navegador - seus documentos nunca saem do seu computador</p>
+        <div class="app-version">Versão 1.0.0</div>
+    </footer>
+
+    <!-- Include DOCX processing libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <script>
+        // Array to hold the processed chapters
+        let processedChapters = [];
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // File input handling
+            const fileInput = document.getElementById('docx-file');
+            const fileNameDisplay = document.getElementById('file-name');
+            
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    fileNameDisplay.textContent = this.files[0].name;
+                    document.getElementById('status-text').textContent = 'Documento carregado, pronto para processamento';
+                } else {
+                    fileNameDisplay.textContent = 'Nenhum arquivo selecionado';
+                }
+            });
+            
+            // Drag and drop functionality
+            const dropArea = document.querySelector('.file-input-label');
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropArea.style.borderColor = '#4361ee';
+                dropArea.style.backgroundColor = 'rgba(67, 97, 238, 0.1)';
+            }
+            
+            function unhighlight() {
+                dropArea.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                dropArea.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
+            }
+            
+            dropArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    fileNameDisplay.textContent = files[0].name;
+                    document.getElementById('status-text').textContent = 'Documento carregado, pronto para processamento';
+                }
+            }
+            
+            // Tab switching functionality
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs and content
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    
+                    // Show corresponding content
+                    const tabName = tab.getAttribute('data-tab');
+                    document.getElementById(`${tabName}-tab`).classList.add('active');
+                });
+            });
+            
+            // Process button functionality
+            document.getElementById('process-btn').addEventListener('click', processDocument);
+            
+            // Copy preview content button
+            document.getElementById('copy-preview-btn').addEventListener('click', copyPreviewContent);
+            
+            // Export buttons
+            document.getElementById('export-zip-btn').addEventListener('click', exportAsZip);
+            document.getElementById('download-all-btn').addEventListener('click', downloadAllChapters);
+        });
+        
+        // Render chapters to the UI
+        function renderChapters(chapters) {
+            const chapterList = document.getElementById('chapter-list');
+            chapterList.innerHTML = '';
+            
+            chapters.forEach((chapter, index) => {
+                const chapterCard = document.createElement('div');
+                chapterCard.className = 'chapter-card';
+                chapterCard.innerHTML = `
+                    <div class="chapter-header">
+                        <div class="chapter-number">${index + 1}</div>
+                        <h3 class="chapter-title">${chapter.title}</h3>
+                    </div>
+                    <div class="chapter-content">
+                        ${chapter.content}
+                    </div>
+                    <div class="chapter-actions">
+                        <button class="btn btn-outline preview-btn" data-index="${index}">
+                            <i class="fas fa-eye"></i> Visualizar
+                        </button>
+                        <button class="btn btn-success copy-btn" data-index="${index}">
+                            <i class="fas fa-copy"></i> Copiar
+                        </button>
+                    </div>
+                `;
+                
+                chapterList.appendChild(chapterCard);
+            });
+            
+            // Add event listeners to the new buttons
+            document.querySelectorAll('.preview-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = this.getAttribute('data-index');
+                    previewChapter(processedChapters[index]);
+                });
+            });
+            
+            document.querySelectorAll('.copy-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = this.getAttribute('data-index');
+                    copyChapterContent(processedChapters[index].content);
+                });
+            });
+        }
+        
+        // Preview a chapter
+        function previewChapter(chapter) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            document.querySelector('.tab[data-tab="preview"]').classList.add('active');
+            document.getElementById('preview-tab').classList.add('active');
+            
+            document.getElementById('preview-content').innerHTML = `
+                <h1>${chapter.title}</h1>
+                <div class="chapter-preview-content">${chapter.content}</div>
+            `;
+        }
+        
+        // Copy chapter content to clipboard
+        function copyChapterContent(content) {
+            // Create a temporary element to hold the HTML content
+            const tempElement = document.createElement('div');
+            tempElement.innerHTML = content;
+            
+            // Create a range and select the HTML content
+            const range = document.createRange();
+            range.selectNode(tempElement);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            
+            try {
+                // Execute the copy command
+                document.execCommand('copy');
+                showCopyAlert();
+            } catch (err) {
+                console.error('Falha ao copiar: ', err);
+            }
+            
+            // Clean up
+            window.getSelection().removeAllRanges();
+        }
+        
+        // Copy preview content
+        function copyPreviewContent() {
+            const content = document.getElementById('preview-content').innerHTML;
+            copyChapterContent(content);
+        }
+        
+        // Show copy success alert
+        function showCopyAlert() {
+            const alert = document.getElementById('copy-alert');
+            alert.classList.add('show');
+            
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Process document function
+        function processDocument() {
+            const fileInput = document.getElementById('docx-file');
+            const summary = document.getElementById('chapter-summary').value;
+            const statusText = document.getElementById('status-text');
+            const progressBar = document.getElementById('progress');
+            
+            if (!fileInput.files.length || !summary.trim()) {
+                alert('Por favor, selecione um arquivo DOCX e insira os títulos dos capítulos.');
+                return;
+            }
+            
+            // Get chapter titles from textarea
+            const chapterTitles = summary.split('\n')
+                .map(title => title.trim())
+                .filter(title => title.length > 0);
+            
+            if (chapterTitles.length === 0) {
+                alert('Por favor, insira pelo menos um título de capítulo.');
+                return;
+            }
+            
+            // Update status
+            statusText.textContent = 'Processando documento...';
+            progressBar.style.width = '30%';
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                const arrayBuffer = event.target.result;
+                
+                // Process DOCX with Mammoth
+                mammoth.convertToHtml({ arrayBuffer: arrayBuffer })
+                    .then(function(result) {
+                        progressBar.style.width = '60%';
+                        statusText.textContent = 'Identificando capítulos...';
+                        
+                        const html = result.value;
+                        const chapters = splitDocumentIntoChapters(html, chapterTitles);
+                        
+                        progressBar.style.width = '90%';
+                        statusText.textContent = 'Gerando páginas HTML...';
+                        
+                        processedChapters = chapters;
+                        
+                        setTimeout(() => {
+                            progressBar.style.width = '100%';
+                            statusText.textContent = 'Documento processado com sucesso!';
+                            
+                            // Render the chapters
+                            renderChapters(processedChapters);
+                            
+                            setTimeout(() => {
+                                alert('Documento processado com sucesso! Agora você pode visualizar e copiar capítulos individuais.');
+                            }, 300);
+                        }, 800);
+                    })
+                    .catch(function(err) {
+                        console.error(err);
+                        statusText.textContent = 'Erro ao processar o documento.';
+                        alert('Ocorreu um erro ao processar o documento. Certifique-se de que é um arquivo DOCX válido.');
+                    });
+            };
+            
+            reader.onerror = function() {
+                statusText.textContent = 'Erro ao ler o arquivo.';
+                alert('Ocorreu um erro ao ler o arquivo. Por favor, tente novamente.');
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        // Split document into chapters based on titles
+        function splitDocumentIntoChapters(html, chapterTitles) {
+            const chapters = [];
+            let currentChapter = { title: chapterTitles[0], content: '' };
+            let currentTitleIndex = 0;
+            
+            // Split the HTML by heading elements
+            const headingRegex = /<(h[1-6])(.*?)>(.*?)<\/\1>/gi;
+            let lastIndex = 0;
+            let match;
+            
+            while ((match = headingRegex.exec(html)) !== null) {
+                const headingText = match[3];
+                
+                // Check if this heading matches the next chapter title
+                if (currentTitleIndex < chapterTitles.length - 1 && 
+                    headingText.includes(chapterTitles[currentTitleIndex + 1])) {
+                    
+                    // Save the current chapter
+                    chapters.push(currentChapter);
+                    
+                    // Start a new chapter
+                    currentTitleIndex++;
+                    currentChapter = {
+                        title: chapterTitles[currentTitleIndex],
+                        content: ''
+                    };
+                }
+                
+                // Add content from the last split point to the current heading
+                const contentBetween = html.substring(lastIndex, match.index);
+                currentChapter.content += contentBetween + match[0];
+                lastIndex = headingRegex.lastIndex;
+            }
+            
+            // Add the remaining content
+            currentChapter.content += html.substring(lastIndex);
+            chapters.push(currentChapter);
+            
+            return chapters;
+        }
+        
+        // Export as ZIP
+        function exportAsZip() {
+            if (processedChapters.length === 0) {
+                alert('Por favor, processe um documento primeiro.');
+                return;
+            }
+            
+            const zip = new JSZip();
+            
+            // Add each chapter as an HTML file
+            processedChapters.forEach((chapter, index) => {
+                const htmlContent = `
+                    <!DOCTYPE html>
+                    <html lang="pt-BR">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>${chapter.title}</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                line-height: 1.6;
+                                padding: 20px;
+                                max-width: 800px;
+                                margin: 0 auto;
+                            }
+                            h1 {
+                                color: #4361ee;
+                                border-bottom: 2px solid #4361ee;
+                                padding-bottom: 10px;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>${chapter.title}</h1>
+                        <div>${chapter.content}</div>
+                        <button onclick="copyContent()" style="margin-top: 20px; padding: 10px 20px; background: #4361ee; color: white; border: none; border-radius: 5px; cursor: pointer;">Copiar Conteúdo</button>
+                        <script>
+                            function copyContent() {
+                                const content = document.body.innerHTML;
+                                navigator.clipboard.writeText(content);
+                                alert('Conteúdo copiado para a área de transferência!');
+                            }
+                        </script>
+                    </body>
+                    </html>
+                `;
+                
+                zip.file(`capitulo_${index + 1}.html`, htmlContent);
+            });
+            
+            // Generate the ZIP file
+            zip.generateAsync({ type: 'blob' })
+                .then(function(content) {
+                    // Save the ZIP file
+                    saveAs(content, 'capitulos.zip');
+                });
+        }
+        
+        // Download all chapters as individual HTML files
+        function downloadAllChapters() {
+            if (processedChapters.length === 0) {
+                alert('Por favor, processe um documento primeiro.');
+                return;
+            }
+            
+            processedChapters.forEach((chapter, index) => {
+                const htmlContent = `
+                    <!DOCTYPE html>
+                    <html lang="pt-BR">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>${chapter.title}</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                line-height: 1.6;
+                                padding: 20px;
+                                max-width: 800px;
+                                margin: 0 auto;
+                            }
+                            h1 {
+                                color: #4361ee;
+                                border-bottom: 2px solid #4361ee;
+                                padding-bottom: 10px;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>${chapter.title}</h1>
+                        <div>${chapter.content}</div>
+                        <button onclick="copyContent()" style="margin-top: 20px; padding: 10px 20px; background: #4361ee; color: white; border: none; border-radius: 5px; cursor: pointer;">Copiar Conteúdo</button>
+                        <script>
+                            function copyContent() {
+                                const content = document.body.innerHTML;
+                                navigator.clipboard.writeText(content);
+                                alert('Conteúdo copiado para a área de transferência!');
+                            }
+                        </script>
+                    </body>
+                    </html>
+                `;
+                
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                saveAs(blob, `capitulo_${index + 1}.html`);
+            });
+        }
+    </script>
+</body>
+</html>
