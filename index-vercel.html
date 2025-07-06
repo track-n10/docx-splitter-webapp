@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOCX Chapter Splitter - Client-Side Version</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --warning: #f8961e;
+            --danger: #e63946;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --electron-blue: #47848f;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #2c3e50);
+            color: var(--light);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: rgba(0, 0, 0, 0.4);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            border-radius: 15px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .version-notice {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.12);
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #b0bec5;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-input-label:hover {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: var(--primary);
+        }
+        
+        .file-name {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--success);
+            font-style: italic;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #2a9d8f);
+        }
+        
+        .progress-bar {
+            height: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            width: 0;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+        
+        .chapter-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-top: 1.5rem;
+        }
+        
+        .chapter-card {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .chapter-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .chapter-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .chapter-title {
+            font-size: 1.3rem;
+            margin: 0;
+        }
+        
+        .chapter-number {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .chapter-content {
+            padding: 25px;
+            max-height: 250px;
+            overflow-y: auto;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.15);
+        }
+        
+        .chapter-actions {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .copy-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            transform: translateX(200%);
+            transition: transform 0.4s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .copy-alert.show {
+            transform: translateX(0);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem 0 1rem;
+            color: var(--gray);
+            font-size: 0.95rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .chapter-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-book-open"></i> DOCX Chapter Splitter</h1>
+            <p class="subtitle">Client-Side Version - Process documents entirely in your browser</p>
+            <div class="version-notice">
+                <strong>⚡ Browser-Only Processing:</strong> Your documents never leave your computer - all processing happens locally in your browser!
+            </div>
+        </header>
+        
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-file-upload"></i> Upload & Process Document</h2>
+            
+            <div class="form-group">
+                <label for="docx-file">Select a DOCX file</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="docx-file" accept=".docx">
+                    <div class="file-input-label">
+                        <i class="fas fa-cloud-upload-alt"></i> Drag & drop or click to select DOCX file
+                    </div>
+                </div>
+                <div id="file-name" class="file-name">No file selected</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="chapter-summary">Chapter Titles (one per line)</label>
+                <textarea id="chapter-summary" placeholder="Enter chapter titles, one per line:
+
+Example:
+Introduction
+Chapter 1: Getting Started
+Chapter 2: Advanced Features
+Chapter 3: Best Practices
+Conclusion"></textarea>
+            </div>
+            
+            <button id="process-btn" class="btn">
+                <i class="fas fa-cogs"></i> Process Document in Browser
+            </button>
+            
+            <div style="margin-top: 20px;">
+                <p id="status-text">No document loaded</p>
+                <div class="progress-bar">
+                    <div id="progress" class="progress"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" id="results-section" style="display: none;">
+            <h2 class="card-title"><i class="fas fa-book"></i> Generated Chapters</h2>
+            <div class="chapter-list" id="chapter-list">
+                <!-- Chapters will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="copy-alert" id="copy-alert">
+        <i class="fas fa-check-circle"></i> Content copied to clipboard!
+    </div>
+    
+    <footer class="container">
+        <p>DOCX Chapter Splitter - Client-Side Version | Your documents are processed locally and never uploaded to any server</p>
+    </footer>
+
+    <!-- Include DOCX processing libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <script>
+        let processedChapters = [];
+        let currentFile = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('docx-file');
+            const fileNameDisplay = document.getElementById('file-name');
+            const dropArea = document.querySelector('.file-input-label');
+            
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    currentFile = this.files[0];
+                    fileNameDisplay.textContent = currentFile.name;
+                    updateStatus('Document loaded, ready for processing');
+                    updateProgress(10);
+                } else {
+                    currentFile = null;
+                    fileNameDisplay.textContent = 'No file selected';
+                    updateProgress(0);
+                }
+            });
+            
+            // Drag and drop functionality
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropArea.style.borderColor = '#4361ee';
+                dropArea.style.backgroundColor = 'rgba(67, 97, 238, 0.1)';
+            }
+            
+            function unhighlight() {
+                dropArea.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                dropArea.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
+            }
+            
+            dropArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length > 0 && files[0].name.endsWith('.docx')) {
+                    fileInput.files = files;
+                    currentFile = files[0];
+                    fileNameDisplay.textContent = files[0].name;
+                    updateStatus('Document loaded, ready for processing');
+                    updateProgress(10);
+                } else {
+                    alert('Please select only .docx files');
+                }
+            }
+            
+            document.getElementById('process-btn').addEventListener('click', processDocument);
+        });
+        
+        function updateProgress(percentage) {
+            document.getElementById('progress').style.width = `${percentage}%`;
+        }
+        
+        function updateStatus(text) {
+            document.getElementById('status-text').textContent = text;
+        }
+        
+        async function processDocument() {
+            if (!currentFile) {
+                alert('Please select a DOCX file first.');
+                return;
+            }
+            
+            const summary = document.getElementById('chapter-summary').value.trim();
+            if (!summary) {
+                alert('Please enter chapter titles.');
+                return;
+            }
+            
+            const chapterTitles = summary.split('\n')
+                .map(title => title.trim())
+                .filter(title => title.length > 0);
+            
+            if (chapterTitles.length === 0) {
+                alert('Please enter at least one chapter title.');
+                return;
+            }
+            
+            try {
+                updateStatus('Processing document in your browser...');
+                updateProgress(30);
+                
+                const arrayBuffer = await currentFile.arrayBuffer();
+                const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+                
+                updateProgress(60);
+                updateStatus('Splitting into chapters...');
+                
+                const html = result.value;
+                const chapters = splitDocumentIntoChapters(html, chapterTitles);
+                
+                processedChapters = chapters;
+                renderChapters(processedChapters);
+                
+                updateProgress(100);
+                updateStatus(`Document processed successfully! ${chapters.length} chapters created.`);
+                
+                document.getElementById('results-section').style.display = 'block';
+                
+                setTimeout(() => {
+                    alert(`Document processed successfully!\n${chapters.length} chapters were created.\n\nNote: This browser version outputs HTML format. For DOCX downloads, use the full version on Railway.`);
+                }, 300);
+                
+            } catch (error) {
+                console.error('Processing error:', error);
+                updateStatus('Error processing document');
+                updateProgress(0);
+                alert('Error processing document. Please ensure it\'s a valid DOCX file.');
+            }
+        }
+        
+        function splitDocumentIntoChapters(html, chapterTitles) {
+            const chapters = [];
+            let currentChapter = { title: chapterTitles[0], content: '' };
+            let currentTitleIndex = 0;
+            
+            const headingRegex = /<(h[1-6])(.*?)>(.*?)<\/\1>/gi;
+            let lastIndex = 0;
+            let match;
+            
+            while ((match = headingRegex.exec(html)) !== null) {
+                const headingText = match[3];
+                
+                if (currentTitleIndex < chapterTitles.length - 1 && 
+                    headingText.toLowerCase().includes(chapterTitles[currentTitleIndex + 1].toLowerCase())) {
+                    
+                    chapters.push(currentChapter);
+                    currentTitleIndex++;
+                    currentChapter = {
+                        title: chapterTitles[currentTitleIndex],
+                        content: ''
+                    };
+                }
+                
+                const contentBetween = html.substring(lastIndex, match.index);
+                currentChapter.content += contentBetween + match[0];
+                lastIndex = headingRegex.lastIndex;
+            }
+            
+            currentChapter.content += html.substring(lastIndex);
+            chapters.push(currentChapter);
+            
+            return chapters;
+        }
+        
+        function renderChapters(chapters) {
+            const chapterList = document.getElementById('chapter-list');
+            chapterList.innerHTML = '';
+            
+            chapters.forEach((chapter, index) => {
+                const chapterCard = document.createElement('div');
+                chapterCard.className = 'chapter-card';
+                
+                const previewContent = chapter.content.substring(0, 300) + (chapter.content.length > 300 ? '...' : '');
+                
+                chapterCard.innerHTML = `
+                    <div class="chapter-header">
+                        <div class="chapter-number">${index + 1}</div>
+                        <h3 class="chapter-title">${chapter.title}</h3>
+                    </div>
+                    <div class="chapter-content">
+                        <div>${previewContent}</div>
+                    </div>
+                    <div class="chapter-actions">
+                        <button class="btn copy-btn" data-index="${index}">
+                            <i class="fas fa-copy"></i> Copy HTML
+                        </button>
+                        <button class="btn btn-success download-btn" data-index="${index}">
+                            <i class="fas fa-download"></i> Save HTML
+                        </button>
+                    </div>
+                `;
+                
+                chapterList.appendChild(chapterCard);
+            });
+            
+            // Add event listeners
+            document.querySelectorAll('.copy-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = this.getAttribute('data-index');
+                    copyChapterContent(processedChapters[index]);
+                });
+            });
+            
+            document.querySelectorAll('.download-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = this.getAttribute('data-index');
+                    downloadChapterHTML(processedChapters[index], index + 1);
+                });
+            });
+        }
+        
+        function copyChapterContent(chapter) {
+            const content = `<h1>${chapter.title}</h1>\n${chapter.content}`;
+            navigator.clipboard.writeText(content).then(() => {
+                showCopyAlert();
+            }).catch(err => {
+                console.error('Copy failed:', err);
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = content;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showCopyAlert();
+            });
+        }
+        
+        function downloadChapterHTML(chapter, chapterNumber) {
+            const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${chapter.title}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4361ee;
+            padding-bottom: 10px;
+        }
+        .content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>${chapter.title}</h1>
+        ${chapter.content}
+    </div>
+</body>
+</html>`;
+            
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Chapter_${chapterNumber}_${chapter.title.replace(/[^a-z0-9]/gi, '_')}.html`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+        
+        function showCopyAlert() {
+            const alert = document.getElementById('copy-alert');
+            alert.classList.add('show');
+            
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
