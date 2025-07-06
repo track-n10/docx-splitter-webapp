@@ -16,9 +16,11 @@ A client-side web application for splitting DOCX documents into chapters. All pr
 ## How It Works
 
 1. **Upload**: Select or drag & drop a DOCX file
-2. **Define Chapters**: Enter chapter titles (one per line) 
-3. **Process**: The app intelligently splits the document
-4. **Download**: Get individual DOCX files or a ZIP with all chapters
+2. **Define Chapters**: Enter chapter titles (one per line) exactly as they appear in your document
+3. **Optional**: Enable automatic detection if manual titles don't work
+4. **Process**: The app intelligently splits the document using multiple detection methods
+5. **Review**: Check the processing information to understand how chapters were detected
+6. **Download**: Get individual chapters as HTML files
 
 ## Deployment Options (100% Free)
 
