@@ -596,8 +596,14 @@ Conclusão"></textarea>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     
     <script>
+        // Configuration - Change this to your deployed backend URL
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000' 
+            : window.location.origin;
+        
         // Array to hold the processed chapters
         let processedChapters = [];
+        let currentFile = null;
         
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
@@ -607,9 +613,11 @@ Conclusão"></textarea>
             
             fileInput.addEventListener('change', function() {
                 if (this.files.length > 0) {
-                    fileNameDisplay.textContent = this.files[0].name;
+                    currentFile = this.files[0];
+                    fileNameDisplay.textContent = currentFile.name;
                     document.getElementById('status-text').textContent = 'Documento carregado, pronto para processamento';
                 } else {
+                    currentFile = null;
                     fileNameDisplay.textContent = 'Nenhum arquivo selecionado';
                 }
             });
@@ -692,20 +700,31 @@ Conclusão"></textarea>
             chapters.forEach((chapter, index) => {
                 const chapterCard = document.createElement('div');
                 chapterCard.className = 'chapter-card';
+                
+                // Create preview content from chapter content array
+                const previewContent = chapter.content
+                    .slice(0, 3)
+                    .map(p => `<p>${p.text.substring(0, 150)}${p.text.length > 150 ? '...' : ''}</p>`)
+                    .join('');
+                
                 chapterCard.innerHTML = `
                     <div class="chapter-header">
                         <div class="chapter-number">${index + 1}</div>
                         <h3 class="chapter-title">${chapter.title}</h3>
                     </div>
                     <div class="chapter-content">
-                        ${chapter.content}
+                        ${previewContent}
+                        <div class="chapter-stats" style="margin-top: 15px; font-size: 0.8rem; color: #bbb;">
+                            <small><i class="fas fa-paragraph"></i> ${chapter.paragraph_count} parágrafos</small><br>
+                            <small><i class="fas fa-search"></i> ${chapter.found_at}</small>
+                        </div>
                     </div>
                     <div class="chapter-actions">
                         <button class="btn btn-outline preview-btn" data-index="${index}">
                             <i class="fas fa-eye"></i> Visualizar
                         </button>
-                        <button class="btn btn-success copy-btn" data-index="${index}">
-                            <i class="fas fa-copy"></i> Copiar
+                        <button class="btn btn-success download-btn" data-index="${index}">
+                            <i class="fas fa-download"></i> Baixar DOCX
                         </button>
                     </div>
                 `;
@@ -721,10 +740,10 @@ Conclusão"></textarea>
                 });
             });
             
-            document.querySelectorAll('.copy-btn').forEach(btn => {
+            document.querySelectorAll('.download-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const index = this.getAttribute('data-index');
-                    copyChapterContent(processedChapters[index].content);
+                    downloadChapter(processedChapters[index]);
                 });
             });
         }
@@ -737,10 +756,49 @@ Conclusão"></textarea>
             document.querySelector('.tab[data-tab="preview"]').classList.add('active');
             document.getElementById('preview-tab').classList.add('active');
             
+            // Convert chapter content array to HTML
+            const content = chapter.content
+                .map(p => `<p class="chapter-paragraph">${p.text}</p>`)
+                .join('');
+            
             document.getElementById('preview-content').innerHTML = `
                 <h1>${chapter.title}</h1>
-                <div class="chapter-preview-content">${chapter.content}</div>
+                <div class="chapter-preview-content">${content}</div>
             `;
+        }
+        
+        // Download a single chapter as DOCX
+        async function downloadChapter(chapter) {
+            try {
+                const response = await fetch(`${API_URL}/api/download_chapter`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        title: chapter.title,
+                        content: chapter.content
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Download failed');
+                }
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${chapter.title}.docx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+            } catch (error) {
+                console.error('Download error:', error);
+                alert('Erro ao baixar capítulo. Verifique se o servidor está rodando ou tente copiar o conteúdo manualmente.');
+            }
         }
         
         // Copy chapter content to clipboard
@@ -784,18 +842,18 @@ Conclusão"></textarea>
         }
         
         // Process document function
-        function processDocument() {
-            const fileInput = document.getElementById('docx-file');
-            const summary = document.getElementById('chapter-summary').value;
-            const statusText = document.getElementById('status-text');
-            const progressBar = document.getElementById('progress');
-            
-            if (!fileInput.files.length || !summary.trim()) {
-                alert('Por favor, selecione um arquivo DOCX e insira os títulos dos capítulos.');
+        async function processDocument() {
+            if (!currentFile) {
+                alert('Por favor, selecione um arquivo DOCX.');
                 return;
             }
             
-            // Get chapter titles from textarea
+            const summary = document.getElementById('chapter-summary').value.trim();
+            if (!summary) {
+                alert('Por favor, insira os títulos dos capítulos.');
+                return;
+            }
+            
             const chapterTitles = summary.split('\n')
                 .map(title => title.trim())
                 .filter(title => title.length > 0);
@@ -805,55 +863,109 @@ Conclusão"></textarea>
                 return;
             }
             
-            // Update status
-            statusText.textContent = 'Processando documento...';
-            progressBar.style.width = '30%';
-            
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            
-            reader.onload = function(event) {
-                const arrayBuffer = event.target.result;
+            try {
+                updateStatus('Enviando documento para processamento...');
+                updateProgress(20);
                 
-                // Process DOCX with Mammoth
-                mammoth.convertToHtml({ arrayBuffer: arrayBuffer })
-                    .then(function(result) {
-                        progressBar.style.width = '60%';
-                        statusText.textContent = 'Identificando capítulos...';
-                        
-                        const html = result.value;
-                        const chapters = splitDocumentIntoChapters(html, chapterTitles);
-                        
-                        progressBar.style.width = '90%';
-                        statusText.textContent = 'Gerando páginas HTML...';
-                        
-                        processedChapters = chapters;
-                        
-                        setTimeout(() => {
-                            progressBar.style.width = '100%';
-                            statusText.textContent = 'Documento processado com sucesso!';
-                            
-                            // Render the chapters
-                            renderChapters(processedChapters);
-                            
-                            setTimeout(() => {
-                                alert('Documento processado com sucesso! Agora você pode visualizar e copiar capítulos individuais.');
-                            }, 300);
-                        }, 800);
-                    })
-                    .catch(function(err) {
-                        console.error(err);
-                        statusText.textContent = 'Erro ao processar o documento.';
-                        alert('Ocorreu um erro ao processar o documento. Certifique-se de que é um arquivo DOCX válido.');
-                    });
-            };
-            
-            reader.onerror = function() {
-                statusText.textContent = 'Erro ao ler o arquivo.';
-                alert('Ocorreu um erro ao ler o arquivo. Por favor, tente novamente.');
-            };
-            
-            reader.readAsArrayBuffer(file);
+                const formData = new FormData();
+                formData.append('file', currentFile);
+                formData.append('chapter_titles', chapterTitles.join('\n'));
+                
+                updateProgress(40);
+                updateStatus('Processando documento no servidor...');
+                
+                const response = await fetch(`${API_URL}/api/split`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                updateProgress(70);
+                
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.error || 'Processing failed');
+                }
+                
+                updateProgress(90);
+                updateStatus('Finalizando processamento...');
+                
+                processedChapters = result.chapters;
+                renderChapters(processedChapters);
+                
+                updateProgress(100);
+                updateStatus(`Documento processado com sucesso! ${result.total_chapters} capítulos encontrados.`);
+                
+                setTimeout(() => {
+                    alert(`Documento processado com sucesso!\n${result.total_chapters} capítulos foram criados.`);
+                }, 300);
+                
+            } catch (error) {
+                console.error('Processing error:', error);
+                updateStatus('Erro ao processar documento');
+                updateProgress(0);
+                
+                if (error.message.includes('fetch') || error.message.includes('Server error')) {
+                    alert('Erro de conexão com o servidor. Tentando processamento local...');
+                    // Fallback to client-side processing
+                    await processDocumentClientSide();
+                } else {
+                    alert(`Erro ao processar documento: ${error.message}`);
+                }
+            }
+        }
+        
+        function updateProgress(percentage) {
+            document.getElementById('progress').style.width = `${percentage}%`;
+        }
+        
+        function updateStatus(text) {
+            document.getElementById('status-text').textContent = text;
+        }
+        
+        // Fallback client-side processing
+        async function processDocumentClientSide() {
+            try {
+                updateStatus('Processando documento localmente...');
+                updateProgress(30);
+                
+                const arrayBuffer = await currentFile.arrayBuffer();
+                const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+                
+                updateProgress(60);
+                updateStatus('Dividindo em capítulos...');
+                
+                const summary = document.getElementById('chapter-summary').value.trim();
+                const chapterTitles = summary.split('\n')
+                    .map(title => title.trim())
+                    .filter(title => title.length > 0);
+                
+                const html = result.value;
+                const chapters = splitDocumentIntoChapters(html, chapterTitles);
+                
+                processedChapters = chapters.map(chapter => ({
+                    title: chapter.title,
+                    content: [{ text: chapter.content, style: 'Normal' }],
+                    paragraph_count: 1,
+                    found_at: 'Client-side processing'
+                }));
+                
+                renderChapters(processedChapters);
+                
+                updateProgress(100);
+                updateStatus('Documento processado localmente com sucesso!');
+                
+                alert('Documento processado localmente! Para melhores resultados, configure o servidor backend.');
+                
+            } catch (error) {
+                console.error('Client-side processing error:', error);
+                updateStatus('Erro no processamento local');
+                alert('Erro ao processar documento localmente. Verifique se é um arquivo DOCX válido.');
+            }
         }
         
         // Split document into chapters based on titles
@@ -899,16 +1011,56 @@ Conclusão"></textarea>
         }
         
         // Export as ZIP
-        function exportAsZip() {
+        async function exportAsZip() {
             if (processedChapters.length === 0) {
                 alert('Por favor, processe um documento primeiro.');
                 return;
             }
             
+            try {
+                const response = await fetch(`${API_URL}/api/download_all`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        chapters: processedChapters
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('ZIP creation failed');
+                }
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'chapters.zip';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+            } catch (error) {
+                console.error('ZIP export error:', error);
+                alert('Erro ao criar ZIP. Verifique se o servidor está rodando ou tente baixar capítulos individuais.');
+                
+                // Fallback to client-side ZIP creation
+                exportAsZipClientSide();
+            }
+        }
+        
+        // Fallback client-side ZIP creation
+        function exportAsZipClientSide() {
             const zip = new JSZip();
             
             // Add each chapter as an HTML file
             processedChapters.forEach((chapter, index) => {
+                const content = chapter.content
+                    .map(p => `<p>${p.text}</p>`)
+                    .join('');
+                
                 const htmlContent = `
                     <!DOCTYPE html>
                     <html lang="pt-BR">
@@ -933,15 +1085,7 @@ Conclusão"></textarea>
                     </head>
                     <body>
                         <h1>${chapter.title}</h1>
-                        <div>${chapter.content}</div>
-                        <button onclick="copyContent()" style="margin-top: 20px; padding: 10px 20px; background: #4361ee; color: white; border: none; border-radius: 5px; cursor: pointer;">Copiar Conteúdo</button>
-                        <script>
-                            function copyContent() {
-                                const content = document.body.innerHTML;
-                                navigator.clipboard.writeText(content);
-                                alert('Conteúdo copiado para a área de transferência!');
-                            }
-                        </script>
+                        <div>${content}</div>
                     </body>
                     </html>
                 `;
@@ -957,54 +1101,19 @@ Conclusão"></textarea>
                 });
         }
         
-        // Download all chapters as individual HTML files
-        function downloadAllChapters() {
+        // Download all chapters as individual DOCX files
+        async function downloadAllChapters() {
             if (processedChapters.length === 0) {
                 alert('Por favor, processe um documento primeiro.');
                 return;
             }
             
-            processedChapters.forEach((chapter, index) => {
-                const htmlContent = `
-                    <!DOCTYPE html>
-                    <html lang="pt-BR">
-                    <head>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <title>${chapter.title}</title>
-                        <style>
-                            body {
-                                font-family: Arial, sans-serif;
-                                line-height: 1.6;
-                                padding: 20px;
-                                max-width: 800px;
-                                margin: 0 auto;
-                            }
-                            h1 {
-                                color: #4361ee;
-                                border-bottom: 2px solid #4361ee;
-                                padding-bottom: 10px;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <h1>${chapter.title}</h1>
-                        <div>${chapter.content}</div>
-                        <button onclick="copyContent()" style="margin-top: 20px; padding: 10px 20px; background: #4361ee; color: white; border: none; border-radius: 5px; cursor: pointer;">Copiar Conteúdo</button>
-                        <script>
-                            function copyContent() {
-                                const content = document.body.innerHTML;
-                                navigator.clipboard.writeText(content);
-                                alert('Conteúdo copiado para a área de transferência!');
-                            }
-                        </script>
-                    </body>
-                    </html>
-                `;
-                
-                const blob = new Blob([htmlContent], { type: 'text/html' });
-                saveAs(blob, `capitulo_${index + 1}.html`);
-            });
+            // Download chapters one by one with delay to prevent overwhelming
+            for (let i = 0; i < processedChapters.length; i++) {
+                await downloadChapter(processedChapters[i]);
+                // Add delay to prevent overwhelming the browser/server
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
         }
     </script>
 </body>
